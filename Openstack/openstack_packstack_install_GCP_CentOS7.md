@@ -1,4 +1,4 @@
-## OpenStackb (Packstack) Install on GCS (RHEL/CentOS)
+## OpenStack (Packstack) Install on GCS (RHEL/CentOS)
 https://github.com/openstack/packstack
 ### Requirements
 > * Single server (16GB) memory
@@ -28,7 +28,7 @@ gcloud compute addresses list
 ##### gcloud sdk
 * Deploy instance from image (Update [IP_ADDRESS] from previous step) - [Reference](https://cloud.google.com/compute/docs/instances/create-start-instance)
 ```
-gcloud compute instances create openstack --zone us-west2-a --machine-type=n1-highmem-2 --image nested-vm-image --boot-disk-size=10GB --tags http-server --address [IP_ADDRESS] --tags http-server
+gcloud compute instances create openstack --zone us-west2-a --machine-type=n1-highmem-2 --image nested-vm-image --boot-disk-size=10GB --tags http-server --address [IP_ADDRESS]
 ```
 * Connect to the instance - [Reference](https://cloud.google.com/compute/docs/instances/connecting-to-instance)
 ```
