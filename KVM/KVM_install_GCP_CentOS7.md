@@ -1,5 +1,4 @@
 ## KVM Install on GCP (RHEL/CentOS)
-https://github.com/openstack/packstack
 ### Requirements
 > * Single server (4GB) memory
 > * CentOS 7
