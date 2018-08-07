@@ -11,7 +11,7 @@ https://github.com/openstack/packstack
 #### Image creation
 * Create new CentOS image with virtualization extensions enabled - [Reference](https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances)
 ```
-gcloud compute images create nested-vm-image --source-image centos-7 --licenses "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
+gcloud compute images create nested-vm-image --source-image-family=centos-7 --source-image-project=centos-cloud --licenses "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
 ```
 
 #### Static IP creation
