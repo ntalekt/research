@@ -1,7 +1,7 @@
 ## OpenStack (Packstack) Install on GCS (RHEL/CentOS)
 https://github.com/openstack/packstack
 ### Requirements
-> * Single server (16GB) memory
+> * Single server (4GB) memory
 > * CentOS 7
 >  * As tested: Linux release 7.5.1804 (Core) - `cat /etc/redhat-release`
 > * At least one NIC
