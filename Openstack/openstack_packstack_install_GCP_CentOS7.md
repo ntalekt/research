@@ -1,4 +1,4 @@
-## OpenStack (Packstack) Install on GCS (RHEL/CentOS)
+## OpenStack (Packstack) Install on GCP (RHEL/CentOS)
 https://github.com/openstack/packstack
 ### Requirements
 > * Single server (4GB) memory
@@ -42,11 +42,13 @@ sudo passwd root
 ```
 * Confirm virtualization extensions are enabled. We should get the word either vmx or svm in the output, otherwise CPU doesn’t support virtualization.
 ```
-grep -E '(vmx|svm)' /proc/cpuinfo
+lscpu | grep Virtualization
 ```
-* Edit sshd and enable root access. Packstack needs this to deploy
+* Edit sshd and enable root access and password authentication. Packstack needs this to deploy
 ```
 sudo vim /etc/ssh/sshd_config
+PermitRootLogin yes
+PasswordAuthentication yes
 sudo systemctl restart sshd
 ```
 * Disable firewalld and NetworkManager
@@ -66,7 +68,7 @@ sudo yum update -y
 ```
 * Install RDO repo rpm
 ```
-sudo yum install -y https://rdoproject.org/repos/rdo-release.rpm
+sudo yum install https://rdoproject.org/repos/rdo-release.rpm -y
 ```
 * Update yum
 ```
@@ -76,13 +78,13 @@ sudo yum update -y
 ## Install OpenStack Installer (Packstack)
 * To install the packstack installer run
 ```
-sudo yum install -y openstack-packstack
+sudo yum install openstack-packstack -y
 ```
 
 ## Install OpenStack
 * To put everything on a single instance run
 ```
-sudo packstack --allinone --provision-demo=n
+sudo packstack --allinone --provision-demo=n --keystone-admin-passwd=clouduser --ntp-servers=NTP_SERVERS=time1.google.com,time2.google.com --os-compute-hosts=10.168.0.2,10.168.0.3
 ```
 
 ## Configure Horizon for external access
