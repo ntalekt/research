@@ -17,7 +17,7 @@ gcloud compute images create nested-vm-image --source-image-family=centos-7 --so
 #### Static IP creation
 * Create a new static IP in same region as instance [Reference](https://cloud.google.com/compute/docs/ip-addresses/reserve-static-external-ip-address)
 ```
-gcloud compute addresses create openstack --region us-west2 --ip-version IPV4
+gcloud compute addresses create openstack --region us-west2
 ```
 * List static IPs in project
 ```
