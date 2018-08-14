@@ -33,6 +33,37 @@ sudo parted -s /dev/sdb mklabel gpt mkpart primary xfs 0% 100%
 sudo mkfs.xfs /dev/sdb -f
 sudo blkid -o value -s TYPE /dev/sdb
 ```
+> 7. Disable SELINUX
+
+```
+sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+```
+> 8. Disable firewalld and NetworkManager
+
+```
+sudo systemctl disable firewalld
+sudo systemctl stop firewalld
+sudo systemctl disable NetworkManager
+sudo systemctl stop NetworkManager
+sudo systemctl enable network
+sudo systemctl start network
+```
+
+> 9. Ensure that package manager has priority/preferences installed and enabled.
+
+```
+sudo yum install yum-plugin-priorities
+```
+
+>10. Install and Configure NTP
+
+```
+yum install -y ntp ntpdate ntp-doc
+ntpdate 0.us.pool.ntp.org
+hwclock --systohc
+systemctl enable ntpd.service
+systemctl start ntpd.service
+```
 ## Install ceph-deploy on the admin-node
 > 1. Change to `cephuser`, add the ceph repo and install the Ceph deployment tool 'ceph-deploy' with the yum command.
 
