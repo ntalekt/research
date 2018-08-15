@@ -1,4 +1,4 @@
-# ceph install on GCS Centos7
+# ceph install on GCP Centos7
 ceph 10.2.11
 ## Prepare nodes
 
