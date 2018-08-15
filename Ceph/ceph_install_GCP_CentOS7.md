@@ -1,5 +1,6 @@
 # ceph install on GCP Centos7
-ceph 10.2.11
+ceph 10.2.11 (Jewel)
+ceph 12.2.7 (Luminous)
 ## Prepare nodes
 
 > 1. Open GCS Cloud Shell
