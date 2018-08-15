@@ -3,7 +3,7 @@ ceph 10.2.11 (Jewel)
 ceph 12.2.7 (Luminous)
 ## Prepare nodes
 
-> 1. Open GCS Cloud Shell
+> 1. Open GCP Cloud Shell
 > 2. Connect to a node
 
 ```
