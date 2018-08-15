@@ -69,7 +69,7 @@ systemctl start ntpd.service
 
 ```
 su - cephuser
-sudo rpm -Uhv http://download.ceph.com/rpm-jewel/el7/noarch/ceph-release-1-1.el7.noarch.rpm
+sudo rpm -Uhv http://download.ceph.com/rpm-mimic/el7/noarch/ceph-release-1-1.el7.noarch.rpm
 sudo yum update -y && sudo yum install ceph-deploy -y
 ```
 ## Create New Cluster Config
