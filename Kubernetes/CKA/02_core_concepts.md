@@ -340,7 +340,7 @@ Generate Deployment YAML file (-o yaml). Don't create it(--dry-run)
 
 Generate Deployment YAML file (-o yaml). Don't create it(--dry-run) with 4 Replicas (--replicas=4)
 
-    kubectl create deployment --image=nginx nginx --dry-run -o yaml > nginx-deployment.yaml
+    kubectl create deployment --image=nginx nginx --dry-run=client -o yaml > nginx-deployment.yaml
 
 ## Section 2:33
 
@@ -349,132 +349,128 @@ Generate Deployment YAML file (-o yaml). Don't create it(--dry-run) with 4 Repli
 Kubernetes creates a kube-system namespace for it's own internal services.
 
 -   Can assign quotas to name spaces
-Pods in the default namespace
-```
-kubectl get pods
-```
+    Pods in the default namespace
+
+
+    kubectl get pods
+
 Pods in the kube-system namespace
-```
-kubectl get pods --namespace=kube-system
-```
+
+    kubectl get pods --namespace=kube-system
+
 Create pods in a different namespace
-```
-kubectl create -f pod-definition.yml --namespace=dev
-```
+
+    kubectl create -f pod-definition.yml --namespace=dev
+
 pod-definition.yml
-```
-apiVersion: v1
-kind: Pod
-metadata:
-  name: myapp-pod
-  namespace: dev
-  labels:
-      app: myapp
-      type: front-end
-spec:
-  containers:
-    - name: nginx-container
-      image: nginx
-```
+
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: myapp-pod
+      namespace: dev
+      labels:
+          app: myapp
+          type: front-end
+    spec:
+      containers:
+        - name: nginx-container
+          image: nginx
+
 namespace-dev.yml
-```
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: dev
-```
+
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: dev
+
 Switch Namespaces
-```
-kubectl config set-context $(kubectl config current context) --namespace=dev
-```
+
+    kubectl config set-context $(kubectl config current context) --namespace=dev
+
 View pods in all name
-```
-kubectl pods --all-namespaces
-```
+
+    kubectl pods --all-namespaces
 
 Quota definition
 compute-quota.yaml
-```
-apiVersion: v1
-kind: ResourceQuota
-metadata:
-  name: compute-quota
-  namespace: dev
-spec:
-  hard:
-    pods: "10"
-    requests.cpu: "4"
-    requests.memory: 5Gi
-    limits.cpu: "10"
-    limits.memory: 10Gi
-```
+
+    apiVersion: v1
+    kind: ResourceQuota
+    metadata:
+      name: compute-quota
+      namespace: dev
+    spec:
+      hard:
+        pods: "10"
+        requests.cpu: "4"
+        requests.memory: 5Gi
+        limits.cpu: "10"
+        limits.memory: 10Gi
 
 ## Section 2:36
 
 ### Services
+
 Helps connect applications together with other applications or users.
 A service is an object. Listens to port on node and forwards to pod.
-* NodePort
-* ClusterIP
-* LoadBalancer
+
+-   NodePort
+-   ClusterIP
+-   LoadBalancer
 
 service-definition.yml
-```
-apiVersion: v1
-kind: Service
-metadata:
-  name: myapp-service
-spec:
-  type: NodePort
-  ports:
-   - targetPort: 80
-     port: 80
-     nodePort: 30008
-  selector:
-     app: myapp
-     type: front-end
-```
+
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: myapp-service
+    spec:
+      type: NodePort
+      ports:
+       - targetPort: 80
+         port: 80
+         nodePort: 30008
+      selector:
+         app: myapp
+         type: front-end
+
 View Services
-```
-kubectl get services
-```
+
+    kubectl get services
+
 ## Section 2:37
 
 ### Services Cluster IP
-```
-apiVersion: v1
-kind: Service
-metadata:
-  name: back-end
-spec:
-  type: ClusterIP
-  ports:
-   - targetPort: 80
-     port: 80
-  selector:
-     app: myapp
-     type: back-end
-```
+
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: back-end
+    spec:
+      type: ClusterIP
+      ports:
+       - targetPort: 80
+         port: 80
+      selector:
+         app: myapp
+         type: back-end
+
 ## Section 2:40
 
 ### Imperative Commands
 
-```
---dry-run=client -o yaml
-```
+    --dry-run=client -o yaml
+
 Create pods
-```
-kubectl run custom-nginx --image=nginx
-```
-```
-kubectl run redis --image=redis:alpine --labels="tier=db"
-```
-```
-kubectl create deployment webapp --image=kodekloud/webapp-color
-kubectl scale deployment webapp --replicas=3
-```
+
+    kubectl run custom-nginx --image=nginx
+
+    kubectl run redis --image=redis:alpine --labels="tier=db"
+
+    kubectl create deployment webapp --image=kodekloud/webapp-color
+    kubectl scale deployment webapp --replicas=3
 
 Create service
-```
-kubectl expose pod redis --port=8080 --name redis-service
-```
+
+    kubectl expose pod redis --port=8080 --name redis-service
