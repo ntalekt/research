@@ -1,4 +1,4 @@
-# Core Concepts Progress: 44 / 44
+# Core Concepts Progress: 44 / 44 (complete)
 
 ## Section 2:9
 
