@@ -1,4 +1,4 @@
-# Scheduling Progress: 19 / 29
+# Scheduling Progress: 22 / 29
 
 ## Section 3:46
 
@@ -172,3 +172,30 @@ default is set at the namespace level.
 Extract running pod definition
 
     kubectl get pod elephant -o yaml > elephant.yaml
+
+## Section 3:64
+
+### DaemonSets
+
+One copy of pod exists on each node in the cluster (e.g. monitoring solution or log viewer).
+
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      name: monitoring-daemon
+    spec:
+      template:
+        metadata:
+          labels:
+              app: monitoring-agent
+        spec:
+          containers:
+            - name: nginx-container
+              image: nginx
+      selector:
+          matchLabels:
+              app: monitoring-agent
+
+View DaemonSets
+
+    kubectl get daemonsets
