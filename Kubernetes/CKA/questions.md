@@ -14,3 +14,5 @@
 -   Do we modify the default resource requests per pod? (0.5cpu/256Mb)
 
 -   Do we use the default scheduler or write our own?
+
+-   how do we monitor the Kubernetes clusters/pods?
