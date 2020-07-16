@@ -1,4 +1,4 @@
-# Application Lifecycle Management Progress: 6 / 23
+# Application Lifecycle Management Progress: 9 / 23
 
 ## Section 4:85
 
@@ -28,3 +28,20 @@ Possible to roll back the update
 Creates a deployment and replicaset behind the covers.
 
     kubectl run nginx --image=nginx
+
+## Section 4:90
+
+### Commands and Arguments
+
+Command in Kubernetes definition file overwrites the entrypoint in docker. The args overwrites the CMD in docker. 
+
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: ubuntu-sleeper-pod
+    spec:
+      containers:
+        - name: ubuntu-sleeper
+          image: ubuntu-sleeper
+          command: ["sleep2.0"]
+          args: ["10"]
