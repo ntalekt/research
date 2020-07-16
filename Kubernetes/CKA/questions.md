@@ -1,3 +1,5 @@
+`kubectl get pod elephant -o yaml > elephant.yaml`
+
 -   Do we manually deploy clusters or use kubeadm?
 
 -   How does our image inventory work?
