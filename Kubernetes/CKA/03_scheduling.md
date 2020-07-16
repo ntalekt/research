@@ -1,4 +1,4 @@
-# Scheduling Progress: 22 / 29
+# Scheduling Progress: 29 / 29
 
 ## Section 3:46
 
@@ -199,3 +199,48 @@ One copy of pod exists on each node in the cluster (e.g. monitoring solution or 
 View DaemonSets
 
     kubectl get daemonsets
+
+## Section 3:67
+
+### Static pods
+
+Node/kubelet not part of a cluster.
+
+Can place pod definition files in `/etc/kubernetes/manifests`. Kubelet periodically checks the folder
+
+Check kubelet.service file for `--pod-manifest-path` if it's not there check for `--config`.
+
+Use `docker ps` to view the pods.
+
+## Section 3:69
+
+### Multiple Schedulers
+
+You can instruct the pod descriptor file to use a specific scheduler. `default-scheduler`
+
+-   \--scheduler-name=my-custom-scheduler
+
+Use pod definition file
+
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: myapp-pod
+      labels:
+          app: myapp
+          type: front-end
+    spec:
+      containers:
+        - name: nginx-container
+          image: nginx
+      schedulerName: my-custom-scheduler
+
+View logs of the custom Schedulers
+
+    kubectl logs my-custom-scheduler --name-space=kube-systemd
+
+    netstat -natulp | grep 10259
+
+## Section 3:72
+
+### Configuring Kubernetes Scheduler
