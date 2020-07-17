@@ -1,4 +1,4 @@
-# Application Lifecycle Management Progress: 9 / 23
+# Application Lifecycle Management Progress: 12 / 23
 
 ## Section 4:85
 
@@ -33,7 +33,7 @@ Creates a deployment and replicaset behind the covers.
 
 ### Commands and Arguments
 
-Command in Kubernetes definition file overwrites the entrypoint in docker. The args overwrites the CMD in docker. 
+Command in Kubernetes definition file overwrites the entrypoint in docker. The args overwrites the CMD in docker.
 
     apiVersion: v1
     kind: Pod
@@ -45,3 +45,92 @@ Command in Kubernetes definition file overwrites the entrypoint in docker. The a
           image: ubuntu-sleeper
           command: ["sleep2.0"]
           args: ["10"]
+
+## Section 4:92
+
+### Configure Environment Variables in Applications
+
+#### Plain Key Value
+
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: simple-webapp-color
+    spec:
+      containers:
+        - name: simple-webapp-color
+          image: simple-webapp-color
+          ports:
+            - containerPort: 8080
+          env:
+            - name: APP_COLOR
+              value: pink
+
+#### Plain Key Value
+
+    env:
+      - name: APP_COLOR
+        value: pink
+
+#### ConfigMap
+
+    env:
+      - name: APP_COLOR
+        valueFrom:
+          configMapKeyRef:
+
+#### Secrets
+
+    env:
+      - name: APP_COLOR
+        valueFrom:
+          secretKeyRef:
+
+## Section 4:93
+
+### Configuring ConfigMaps in Applications
+
+Manage configuration data centrally using a ConfigMap.
+
+-   create the ConfigMap
+-   inject ConfigMap into pod
+
+#### Imperative
+
+    kubectl create configmap app-config --from-literal=APP_COLOR=blue --from-literal=APP_MOD=prod
+
+#### Declarative
+
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: app-config
+    data:
+      APP_COLOR: blue
+      APP_MODE: prod
+
+Create the configMap
+`kubectl create -f config-map.yaml`
+
+View configMaps
+`kubectl get configmaps`
+
+#### ConfigMap in Pods
+
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: simple-webapp-color
+    spec:
+      containers:
+        - name: simple-webapp-color
+          image: simple-webapp-color
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                  name: app-config
+
+## Section 4:95
+
+### Configure Secrets in Applications
