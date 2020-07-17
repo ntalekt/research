@@ -1,4 +1,4 @@
-# Application Lifecycle Management Progress: 12 / 23
+# Application Lifecycle Management Progress: 23 / 23
 
 ## Section 4:85
 
@@ -134,3 +134,115 @@ View configMaps
 ## Section 4:95
 
 ### Configure Secrets in Applications
+
+Don't store passwords in configMaps. Stored in secrets as they are hashed.
+
+#### Create Secrets
+
+##### Imperative
+
+    kubectl create secret generic app-secret --from-literal=DB_Host=mysql
+
+    kubectl create secret generic app-secret --from-file=app_secret.properties
+
+##### Declarative
+
+Values must be encoded using `echo -n 'mysql' | base64`
+
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: app-config
+    data:
+      DB_Host: bXlzcWw=
+      DB_User: cm9vdA==
+      DB_Password: cGFzc3dyZA==
+
+View Secrets `kubectl get secrets`
+View contents of secrets `kubectl get secret app-secret -o yaml`
+
+Decode the hash values `echo -n 'bXlzcWw=' | base64 --decode`
+
+Configure secrets with Pods
+
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: simple-webapp-color
+    spec:
+      containers:
+        - name: simple-webapp-color
+          image: simple-webapp-color
+          ports:
+            - containerPort: 8080
+          envFrom:
+          - secretRef:
+              name: test-secret
+
+## Section 4:99
+
+### Multi Container Pods
+
+Add another container to the array
+
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: simple-webapp-color
+    spec:
+      containers:
+        - name: simple-webapp-color
+          image: simple-webapp-color
+          ports:
+            - containerPort: 8080
+        - name: log-agent
+          image: log-agent
+
+Example lab
+
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      labels:
+        name: app
+      name: app
+      namespace: elastic-stack
+    spec:
+      containers:
+        - image: kodekloud/event-simulator
+          name: app
+          volumeMounts:
+          - mountPath: /log
+            name: log-volume
+        - image: kodekloud/filebeat-configured
+          name: sidecar
+          volumeMounts:
+          - mountPath: /var/log/event-simulator/
+            name: log-volume    
+      volumes:
+      - hostPath:
+          path: /var/log/webapp
+          type: DirectoryOrCreate
+        name: log-volume
+
+## Section 4:102
+
+### InitContainers
+
+Example
+
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: myapp-pod
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp-container
+        image: busybox:1.28
+        command: ['sh', '-c', 'echo The app is running! && sleep 3600']
+      initContainers:
+      - name: init-myservice
+        image: busybox
+        command: ['sh', '-c', 'git clone <some-repository-that-will-be-used-by-application> ; done;']
