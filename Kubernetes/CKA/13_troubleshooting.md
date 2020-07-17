@@ -1,1 +1,1 @@
-# Troubleshooting Progress: 0 / 12
+## Troubleshooting Progress: 0 / 12
