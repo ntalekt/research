@@ -18,3 +18,5 @@
 -   Do we use the default scheduler or write our own?
 
 -   how do we monitor the Kubernetes clusters/pods?
+
+-   what is our pod eviction timeout?
