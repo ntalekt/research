@@ -1,4 +1,4 @@
-# Cluster Maintenance Progress: 9 / 15
+# Cluster Maintenance Progress: 15 / 15
 
 ## Section 5:108
 
@@ -38,3 +38,38 @@ Upgrade the kubelets
     kubectl drain node01
     apt-get upgrade -y kubelet=1.18.0-00
     systemctl restart kubelet
+
+## Section 5:115
+
+### Backup and Restore Methods
+
+Possible to query the kube-apiserver and get all the resource configs for all objects. `kubectl get all --all-namespaces -o yaml > all-deploy-services.yaml`
+
+Also possible to snapshot the etcd database
+
+    ETCDCTL_API=3 etcdctl \
+        snapshot save \
+        --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+        --cert=/etc/kubernetes/pki/etcd/server.crt \
+        --key=/etc/kubernetes/pki/etcd/server.key \
+        --endpoints=127.0.0.1:2379 \
+        /tmp/snapshot-pre-boot.db
+
+Check the status of the snapshot
+
+    ETCDCTL_API=3 etcdctl \
+        snapshot status snapshot.db
+
+Restore ETCD
+
+    ETCDCTL_API=3 etcdctl \
+    snapshot restore /tmp/snapshot-pre-boot.db \
+    --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+    --cert=/etc/kubernetes/pki/etcd/server.crt \
+    --key=/etc/kubernetes/pki/etcd/server.key \
+    --endpoints=127.0.0.1:2379 \
+    --data-dir="/var/lib/etcd-from-backup" \
+    --initial-cluster="master=https://127.0.0.1:2380" \
+    --name="master" \
+    --initial-advertise-peer-urls="https://127.0.0.1:2380" \
+    --initial-cluster-token="etcd-cluster-1"
