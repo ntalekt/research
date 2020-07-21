@@ -1,4 +1,4 @@
-# Security Progress: 12 / 29
+# Security Progress: 15 / 29
 
 ## Section 6:123
 
@@ -91,3 +91,45 @@ Find `kube-apiserver.yaml` under `/etc/kubernetes/manifests`
 `openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout`
 
 `kubectl logs etcd-master`
+
+## Section 6:134
+
+### Certificates API
+
+1.  User first creates a key `openssl genrsa -out jane.key 2048`
+2.  User creates CSR using the key `openssl req -new -key jane.key -subj "/CN=jane" -out jane.csr`
+
+Administrator creates a certificate signing object
+
+    apiVersion: certificates.k8s.io/v1beta1
+    kind: CertificateSigningRequest
+    metadata:
+      name: jane
+    spec:
+      groups:
+        - system:authenticated
+      usages:
+        - digital signature
+        - key encipherment
+        - server auth
+      request:
+
+Encode the CSR using base64 and put into request section `cat jane.csr | base64`
+
+View CSRs
+
+    kubectl get csr
+
+Approve CSR
+
+    kubectl certificate approve jane
+
+View the certificate
+
+    kubectl get csr jane -o yaml
+
+Decode the cert
+
+    echo "LS0....q" | base64 --Decode
+
+View the cluster signing cert as part of hte controller-manager configuring `cat /etc/kubernetes/manifests/kube-controller-manager.yaml`
