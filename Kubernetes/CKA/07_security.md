@@ -1,4 +1,4 @@
-# Security Progress: 7 / 29
+# Security Progress: 12 / 29
 
 ## Section 6:123
 
@@ -25,3 +25,69 @@ user-details.csv
 ## Section 6:128
 
 ### TLS Basics
+
+#### PKI - Public Key Infrastructure
+
+-   Symmetric Encryption
+-   Asymmetric Encryption - uses a pair of keys (private and public)
+
+1.  User browses to website
+2.  Website sends user public key
+3.  User encrypts symmetric key with public key
+4.  Server uses private key to descript and receives symmetric key
+5.  User and server now send encrypted messages using symmetric key
+
+## Section 6:129
+
+### TLS in Kubernetes
+
+#### Server certs for Servers
+
+-   kube-api
+-   etcd server
+-   kubelet
+
+#### Client certs
+
+-   admin
+-   kube-scheduler
+-   kube-controller-manager
+-   kube-proxy
+
+## Section 6:130
+
+### TLS in Kubernetes - Certificate Creation
+
+#### CA Certificate
+
+Generate key -
+`openssl genrsa -out ca.key 2048`
+
+CSR -
+`openssl req -new -key ca.key -subj "/CN=KUBERNETES-CA" -out ca.csr`
+
+Sign cert -
+`openssl x509 -req -in ca.csr -signkey ca.key -out ca.crt`
+
+#### Client Certificate
+
+Generate key -
+`openssl genrsa -out admin.key 2048`
+
+CSR -
+`openssl req -new -key admin.key -subj "/CN=kube-admin/O=system:masters" -out admin.csr`
+
+Sign cert with CA
+`openssl x509 -req -in admin.csr -CA ca.crt -CAkey ca.key -out admin.crt`
+
+## Section 6:131
+
+### View Certificate details
+
+Find `kube-apiserver.yaml` under `/etc/kubernetes/manifests`
+
+#### View details
+
+`openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout`
+
+`kubectl logs etcd-master`
