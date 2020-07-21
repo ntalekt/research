@@ -1,4 +1,4 @@
-# Security Progress: 17 / 29
+# Security Progress: 21 / 29
 
 ## Section 6:123
 
@@ -155,3 +155,58 @@ View a different config
 Change Contexts
 
     kubectl config use-context prod-user@production
+
+## Section 6:139
+
+### API Groups
+
+Focusing on APIs responsible for the clusters functionality.
+
+-   Core group `/api` where core functionality like namespaces, pods, events, nodes etc.
+-   named group `/apis` are more organized like `/apps`, `/extensions`, `/networking.k8s.io` etc
+
+## Section 6:140
+
+### RBAC
+
+Create a role
+
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: developer
+    rules:
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["list", "create"]
+
+Bind a role to a user
+
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: dev-user-binding
+    subjects:
+    - kind: User
+      name: dev-user
+      apiGroup: rbac.authorization.k8s.io
+    roleRef:
+      kind: Role
+      name: developer
+      apiGroup: rbac.authorization.k8s.io
+
+-   Get roles `kubectl get roles`
+-   Get role bindings `kubectl get rolebindings`
+-   Get more details about a role `kubectl describe role developer`
+-   Get more details about a role binding `kubectl describe rolebinding devuser-developer-binding`
+
+#### Check access
+
+    kubectl auth can-i create deployments
+    kubectl auth can-i delete nodes
+    kubectl auth can-i create deployments --as dev-user
+    kubectl auth can-i create pods --as dev-user
+
+## Section 6:142
+
+### Cluster Roles and Role bindings
