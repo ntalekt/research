@@ -1,4 +1,4 @@
-# Security Progress: 21 / 29
+# Security Progress: 23 / 29
 
 ## Section 6:123
 
@@ -210,3 +210,29 @@ Bind a role to a user
 ## Section 6:142
 
 ### Cluster Roles and Role bindings
+
+Create a cluster role
+
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: cluster-administrator
+    rules:
+    - apiGroups: [""]
+      resources: ["nodes"]
+      verbs: ["list", "get", "create", "delete"]
+
+Create a cluster role binding
+
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: cluster-role-binding-michelle
+    subjects:
+    - kind: User
+      name: michelle
+      apiGroup: rbac.authorization.k8s.io
+    roleRef:
+      kind: ClusterRole
+      name: cluster-administrator
+      apiGroup: rbac.authorization.k8s.io
