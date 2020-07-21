@@ -1,4 +1,4 @@
-# Security Progress: 23 / 29
+# Security Progress: 29 / 29
 
 ## Section 6:123
 
@@ -236,3 +236,87 @@ Create a cluster role binding
       kind: ClusterRole
       name: cluster-administrator
       apiGroup: rbac.authorization.k8s.io
+
+## Section 6:144
+
+### Image Security
+
+Create a docker registry secret
+
+    kubectl create secret docker-registry private-reg-cred \
+        --docker-server=myprivateregistry.com:5000         \
+        --docker-username=dock_user               \
+        --docker-password=dock_password            \
+        --docker-email=dock_user@myprivateregistry.com
+
+Create pod definition with private image and secret
+
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: nginx-pod
+    spec:
+      containers:
+      - name: nginx
+        image: private-registry.io/apps/internal-app
+      imagePullSecrets:
+      - name: regcred
+
+## Section 6:146
+
+### Security Contexts
+
+At the pod level
+
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: nginx-pod
+    spec:
+      securityContext:
+        runAsUser: 1000
+      containers:
+      - name: nginx
+        image: nginx
+
+At the container level
+
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: nginx-pod
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        securityContext:
+          runAsUser: 1000
+          capabilities:
+            add: ["MAC_ADMIN"]
+
+## Section 6:148
+
+### Network Policy
+
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: db-policy
+    spec:
+      podSelector:
+        matchLabels:
+          role: db
+      policyTypes:
+      - Ingress
+      ingress:
+      - from:
+        - podSelector:
+            matchLabels:
+              name: api-pod
+        ports:
+        - protocol: TCP
+          port: 3306
+
+```
+
+```
