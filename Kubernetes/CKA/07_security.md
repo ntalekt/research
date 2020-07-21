@@ -1,4 +1,4 @@
-# Security Progress: 15 / 29
+# Security Progress: 17 / 29
 
 ## Section 6:123
 
@@ -133,3 +133,25 @@ Decode the cert
     echo "LS0....q" | base64 --Decode
 
 View the cluster signing cert as part of hte controller-manager configuring `cat /etc/kubernetes/manifests/kube-controller-manager.yaml`
+
+## Section 6:136
+
+### KubeConfig
+
+Default location is `$HOME/.kube/config`
+
+-   Clusters
+-   Contexts
+-   Users
+
+View the current config
+
+    kubectl config view
+
+View a different config
+
+    kubectl config view --kubeconfig=my-custom-config
+
+Change Contexts
+
+    kubectl config use-context prod-user@production
