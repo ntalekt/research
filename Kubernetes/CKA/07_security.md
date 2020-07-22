@@ -1,6 +1,6 @@
 # Security Progress: 29 / 29
 
-## Section 6:123
+## Section 7:123
 
 ### Kubernetes Security Primitives
 
@@ -8,7 +8,7 @@
 
 -   Controlling access to the kube-apiserver is the first line of security.
 
-## Section 6:124
+## Section 7:124
 
 ### Authentication
 
@@ -22,7 +22,7 @@ user-details.csv
     password123,user1,u0001,group1
     password123,user2,u0002,group2
 
-## Section 6:128
+## Section 7:128
 
 ### TLS Basics
 
@@ -37,7 +37,7 @@ user-details.csv
 4.  Server uses private key to descript and receives symmetric key
 5.  User and server now send encrypted messages using symmetric key
 
-## Section 6:129
+## Section 7:129
 
 ### TLS in Kubernetes
 
@@ -54,7 +54,7 @@ user-details.csv
 -   kube-controller-manager
 -   kube-proxy
 
-## Section 6:130
+## Section 7:130
 
 ### TLS in Kubernetes - Certificate Creation
 
@@ -80,7 +80,7 @@ CSR -
 Sign cert with CA
 `openssl x509 -req -in admin.csr -CA ca.crt -CAkey ca.key -out admin.crt`
 
-## Section 6:131
+## Section 7:131
 
 ### View Certificate details
 
@@ -92,7 +92,7 @@ Find `kube-apiserver.yaml` under `/etc/kubernetes/manifests`
 
 `kubectl logs etcd-master`
 
-## Section 6:134
+## Section 7:134
 
 ### Certificates API
 
@@ -134,7 +134,7 @@ Decode the cert
 
 View the cluster signing cert as part of hte controller-manager configuring `cat /etc/kubernetes/manifests/kube-controller-manager.yaml`
 
-## Section 6:136
+## Section 7:136
 
 ### KubeConfig
 
@@ -156,7 +156,7 @@ Change Contexts
 
     kubectl config use-context prod-user@production
 
-## Section 6:139
+## Section 7:139
 
 ### API Groups
 
@@ -165,7 +165,7 @@ Focusing on APIs responsible for the clusters functionality.
 -   Core group `/api` where core functionality like namespaces, pods, events, nodes etc.
 -   named group `/apis` are more organized like `/apps`, `/extensions`, `/networking.k8s.io` etc
 
-## Section 6:140
+## Section 7:140
 
 ### RBAC
 
@@ -207,7 +207,7 @@ Bind a role to a user
     kubectl auth can-i create deployments --as dev-user
     kubectl auth can-i create pods --as dev-user
 
-## Section 6:142
+## Section 7:142
 
 ### Cluster Roles and Role bindings
 
@@ -237,7 +237,7 @@ Create a cluster role binding
       name: cluster-administrator
       apiGroup: rbac.authorization.k8s.io
 
-## Section 6:144
+## Section 7:144
 
 ### Image Security
 
@@ -262,7 +262,7 @@ Create pod definition with private image and secret
       imagePullSecrets:
       - name: regcred
 
-## Section 6:146
+## Section 7:146
 
 ### Security Contexts
 
@@ -294,7 +294,7 @@ At the container level
           capabilities:
             add: ["MAC_ADMIN"]
 
-## Section 6:148
+## Section 7:148
 
 ### Network Policy
 

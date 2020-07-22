@@ -1,6 +1,6 @@
 # Storage Progress: 13 / 13
 
-## Section 6:152
+## Section 8:152
 
 ### Storage in Docker
 
@@ -8,7 +8,7 @@ Default stores at `/var/lib/docker`
 
 Layered architecture in dockerfile
 
-## Section 6:153
+## Section 8:153
 
 ### Volume Driver Plugins in Docker
 
@@ -17,13 +17,13 @@ Layered architecture in dockerfile
 
 Volumes are not controlled by storage drivers, they are controlled by volume drives.
 
-## Section 6:154
+## Section 8:154
 
 ### Container Storage Interface (CSI)
 
 Standard that defines how an orchestration engine, like Kubernetes, would communicate with multiple storage solutions, like portworx, Amazon EBS, Dell EMC, etc.
 
-## Section 6:156
+## Section 8:156
 
 ### Volumes
 
@@ -52,7 +52,7 @@ Pods created in Kubernetes pods are transient but you can persist data by attach
           volumeID: <volume-id>
           fsType: ext4
 
-## Section 6:157
+## Section 8:157
 
 ### Persistent Volumes
 
@@ -70,7 +70,7 @@ Would need to make storage on each pod. Persistent volumes allows administrator 
       hostPath:
         path: /pv/log
 
-## Section 6:158
+## Section 8:158
 
 ### Persistent Volumes Claim
 
