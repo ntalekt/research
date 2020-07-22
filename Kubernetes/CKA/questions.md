@@ -20,3 +20,5 @@
 -   how do we monitor the Kubernetes clusters/pods?
 
 -   what is our pod eviction timeout?
+
+-   what do we use for persistent storage?
