@@ -1,4 +1,4 @@
-# Networking Progress: 20 / 27
+# Networking Progress: 23 / 27
 
 ## Section 9:168
 
@@ -48,3 +48,23 @@ Deploy weave as pods in the cluster `kubectl apply -f "https://cloud.weave.works
 View IP range configured for services
 
     cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep cluster-ip-range
+
+## Section 9:183
+
+### DNS in Kubernetes
+
+Kubernetes deploys a DNS server by default. When I service is created kubernetes dns automatically creates a name record. Different namespaces are sub-domains.
+
+## Section 9:184
+
+### CoreDNS in Kubernetes
+
+CoreDNS deployed as two pods in the kube-system namespace.
+
+`/etc/coredns/Corefile` shows the different plugins.
+
+CoreDNS injected via configMap `kubectl get configmap -n kube-system`
+
+IP of the kube-dns service added to the pods resolv.conf `kubectl get service -n kube-system`
+
+To the default nameserver assigned to each pod `cat /var/lib/kublet/config.yaml`
