@@ -1,4 +1,4 @@
-# Networking Progress: 23 / 27
+# Networking Progress: 27 / 27
 
 ## Section 9:168
 
@@ -68,3 +68,143 @@ CoreDNS injected via configMap `kubectl get configmap -n kube-system`
 IP of the kube-dns service added to the pods resolv.conf `kubectl get service -n kube-system`
 
 To the default nameserver assigned to each pod `cat /var/lib/kublet/config.yaml`
+
+## Section 9:186
+
+### Ingress
+
+Allows users to access your services using a single configurable URL which can be configured to route to different services and implement SSL. Similar to a layer7 load balancer.
+
+#### Ingress Controller
+
+Not installed by default. - GCP - GCE load balancer and NGINX maintanced by Kubernetes project.
+
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: nginx-ingress-controller
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          name: nginx-ingress
+        template:
+          metadata:
+            labels:
+              name: nginx-ingress
+          spec:
+            containers:
+              - name: nginx-ingress-controller
+                image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.21.0
+                args:
+                  - /nginx-ingress-controller
+                  - --configmap=$(POD_NAMESPACE) /nginx-configuration
+                env:
+                  - name: POD_NAME
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.name
+                  - name: POD_NAMESPACE
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.namespace
+                ports:
+                  - name: http
+                    containerPort: 80
+                  - name: https
+                    containerPort: 443
+
+configMap
+
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: nginx-configuration
+
+service
+
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: nginx-ingress
+    spec:
+      type: NodePort
+      ports:
+      - port: 80
+        targetPort: 80
+        protocol: TCP
+        name: http
+      - port: 443
+        targetPort: 443
+        protocol: TCP
+        name: https
+      selector:
+        name: nginx-ingress
+
+#### Ingress Resources
+
+    apiVersion: extensions/v1beta1
+    kind: Ingress
+    metadata:
+      name: ingress-wear
+    spec:
+      backend:
+        serviceName: wear-service
+        servicePort: 80
+
+Split traffic using same URL but different folder.
+
+    apiVersion: extensions/v1beta1
+    kind: Ingress
+    metadata:
+      name: ingress-wear
+      namespace: ingress-space
+    spec:
+      rules:
+      - http:
+          paths:
+          - path: /wear
+            backend:
+              serviceName: wear-service
+              servicePort: 8080
+          - path: /watch
+            backend:
+              serviceName: watch-service
+              servicePort: 8080
+
+Split traffic using different URLs
+
+    apiVersion: extensions/v1beta1
+    kind: Ingress
+    metadata:
+      name: ingress-wear-watch
+    spec:
+      rules:
+      - host: wear.my-online-store.com
+        http:
+          paths:
+          - backend:
+              serviceName: wear-service
+              servicePort: 80
+      - host: watch.my-online-store.com
+        http:
+          paths:
+          - backend:
+              serviceName: watch-service
+              servicePort: 80
+
+    apiVersion: extensions/v1beta1
+    kind: Ingress
+    metadata:
+      name: ingress-pay
+      namespace: critical-space
+      annotation:
+        nginx.ingress.kubernetes.io/rewrite-target: /
+    spec:
+      rules:
+      - http:
+          paths:
+          - path: /pay
+            backend:
+              serviceName: pay-service
+              servicePort: 8282
