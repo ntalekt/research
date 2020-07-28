@@ -43,6 +43,8 @@ Inputs:
 
 ## Lab - BOSH - Deploy a simple release
 
+Make sure to install the netcat-openbsd version of netcat with `apt install netcat-openbsd`.
+
 Install BOSH CLI
 
     wget https://github.com/cloudfoundry/bosh-cli/releases/download/v6.3.1/bosh-cli-6.3.1-linux-amd64
@@ -65,7 +67,7 @@ Upload a release
 Upload a stemcell
 
     wget https://bosh-gce-light-stemcells.s3-accelerate.amazonaws.com/621.61/light-bosh-stemcell-621.61-google-kvm-ubuntu-xenial-go_agent.tgz
-    bosh upload-stemcell --sha1 8a91be2437e1c37991e601c0869e4d95a023f704
+    bosh upload-stemcell --sha1 8a91be2437e1c37991e601c0869e4d95a023f704 light-bosh-stemcell-621.61-google-kvm-ubuntu-xenial-go_agent.tgz
 
 Deploy
 
@@ -86,6 +88,10 @@ SSH to the instance and change to root
 
     bosh -d nginx ssh nginx/9bb57fd2-7e07-49a6-8050-7d331a277987
     sudo -i
+
+Get logs from instance
+
+    bosh -d nginx logs nginx/9bb57fd2-7e07-49a6-8050-7d331a277987
 
 File locations
 
@@ -115,3 +121,92 @@ Force nginx to restart by killing it and grep filters
     killall nginx && \
      grep --after-context 3 "Sending hm message 'alert'" \
      /var/vcap/bosh/log/current
+
+## Lab - BOSH - Persistent Disks
+
+SSH to the instance and change to root
+
+    bosh -d nginx ssh nginx/9bb57fd2-7e07-49a6-8050-7d331a277987
+    sudo -i
+
+Check disks
+
+    df -h
+
+Modify index.html
+
+    vi /var/vcap/store/nginx/index.html
+    curl localhost
+
+Stop bosh agent to force BOSH resurrector to replace with a new one
+
+    sv stop agent
+    bosh tasks
+
+SSH back in and check if index.html persisted
+
+    bosh -d nginx ssh nginx/9bb57fd2-7e07-49a6-8050-7d331a277987
+    curl localhost
+
+Add persistent disk to manifest
+
+    persistent_disk: 1024
+
+Redeploy
+
+    bosh deploy --deployment nginx --non-interactive ~/manifests/nginx.yaml
+
+SSH and look to confirm new disk (/dev/sdb1)
+
+    bosh -d nginx ssh nginx/9bb57fd2-7e07-49a6-8050-7d331a277987
+    df -h
+
+Modify index.html
+
+    vi /var/vcap/store/nginx/index.html
+    curl localhost
+
+Stop bosh agent to force BOSH resurrector to replace with a new one
+
+    sv stop agent
+    bosh tasks
+
+SSH confirm index persisted
+
+    bosh -d nginx ssh nginx/9bb57fd2-7e07-49a6-8050-7d331a277987
+    curl localhost
+
+### Resize disk
+
+Resize persistent disk in manifest and redeploy
+
+    persistent_disk: 2048
+    bosh deploy --deployment nginx --non-interactive ~/manifests/nginx.yaml
+
+Confirm data persisted the disk resize
+
+    bosh -d nginx ssh nginx/9bb57fd2-7e07-49a6-8050-7d331a277987
+    curl localhost
+    df -h
+
+## Lab - BOSH - Patch the OS
+
+    wget https://bosh-gce-light-stemcells.s3-accelerate.amazonaws.com/621.64/light-bosh-stemcell-621.64-google-kvm-ubuntu-xenial-go_agent.tgz
+    bosh upload-stemcell --sha1 d0ae2cfe2c8ae4c4fd058bbf50a7c4d97af9dc1d light-bosh-stemcell-621.64-google-kvm-ubuntu-xenial-go_agent.tgz
+
+Edit the manifest to use the newer version and redeploy
+
+    vi nginx.yaml
+    bosh deploy --deployment nginx --non-interactive ~/manifests/nginx.yaml
+
+## Lab - BOSH - Patch the OS
+
+Upload a new release
+
+    bosh upload-release --sha1 13cf87b2394c7d3924f9d66836c56302fb46a90d \
+      https://bosh.io/d/github.com/cloudfoundry-community/nginx-release?v=1.17.0
+
+Edit the manifest to use the newer release version and redeploy
+
+    vi nginx.yaml
+    bosh deploy --deployment nginx --non-interactive ~/manifests/nginx.yaml
