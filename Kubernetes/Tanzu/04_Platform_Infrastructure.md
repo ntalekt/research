@@ -1,5 +1,7 @@
 # Platform Infrastructure
 
+## Pave the IaaS
+
 SSH to jumpbox
 
     gcloud compute ssh ubuntu@jumpbox
@@ -48,3 +50,62 @@ List the files under this product and identify the file in question.
 Download GCP Terraform Templates
 
     pivnet download-product-files -p elastic-runtime -i 697856 -r 2.9.5
+
+Prepare the variables file for Terraform
+
+    vi terraform.tfvars
+
+Template
+
+    env_name            = "ENV_NAME"
+    project             = "PROJECT_ID"
+    region              = "us-central1"
+    zones               = ["us-central1-b", "us-central1-a", "us-central1-c"]
+    dns_suffix          = "DOMAIN_NAME"
+    opsman_image_url    = ""
+
+    service_account_key = <<SERVICE_ACCOUNT_KEY
+    YOUR_SERVICE_ACCOUNT_KEY #Entire contents of terraform.key.json
+    SERVICE_ACCOUNT_KEY
+
+Install terraform
+
+    wget -O terraform.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip && \
+      unzip terraform.zip && \
+      sudo mv terraform /usr/local/bin
+
+Run terraform
+
+    cd ./terraforming-pks/
+    ln -s ../terraform.tfvars .
+    terraform init
+    terraform plan
+    terraform apply -auto-approve
+
+## Deploy ops manager
+
+List the files under this product and identify the file in question.
+
+    pivnet product-files -p ops-manager -r 2.9.6
+
+Download GCP Terraform Templates
+
+    pivnet download-product-files -p ops-manager -i 726937 -r 2.9.6
+
+Steps 2 & 3 to create image and VM: <https://docs.pivotal.io/platform/ops-manager/2-9/gcp/deploy-manual.html#create-image>
+
+## Deploy BOSH director
+
+Access ops manager: <https://docs.pivotal.io/platform/ops-manager/2-9/gcp/config-terraform.html#access-om>
+
+Google Config: <https://docs.pivotal.io/platform/ops-manager/2-9/gcp/config-terraform.html#gcp-config>
+
+Director Config: <https://docs.pivotal.io/platform/ops-manager/2-9/gcp/config-terraform.html#director-config>
+
+Availability Zones: <https://docs.pivotal.io/platform/ops-manager/2-9/gcp/config-terraform.html#az>
+
+Networks: <https://docs.pivotal.io/platform/ops-manager/2-9/gcp/config-terraform.html#network>
+
+Assign AZs and networks: <https://docs.pivotal.io/platform/ops-manager/2-9/gcp/config-terraform.html#assign-azs>
+
+Security: Be sure to select the checkbox Include OpsManager Root CA in Trusted Certs
