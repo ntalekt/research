@@ -32,6 +32,11 @@ Create a hidden file named .env
     PROJECT_ID=$(gcloud config get-value core/project)
     OPSMAN_FQDN=pcf.${ENV_NAME}.${DOMAIN_NAME}
 
+Source the environment
+
+    source ~/.env
+    echo "source ~/.env" >> ~/.bashrc
+
 Install tools
 
     sudo apt update
