@@ -76,18 +76,434 @@ Install BOSH CLI
     chmod +x bosh
     mkdir bin
     mv bosh bin/
-    export PATH="/home/USER-ID/bin:$PATH"
+    export PATH="/home/ubuntu/workspace/bin:$PATH"
 
 SSH to om to create ssh key
 
     gcloud compute ssh ubuntu@om --zone us-central1-a
 
-    om bosh-env --ssh-private-key
+    om bosh-env --ssh-private-key ~/.ssh/google_compute_engine
+
+Run to set variables
+
+    om bosh-env --ssh-private-key ~/.ssh/google_compute_engine
+    om bosh-env
+
+Append the following line to the ~/.bashrc file (on the jumpbox)
+
+    eval "$(om bosh-env --ssh-private-key ~/.ssh/google_compute_engine)"
+
+Source the updated .bashrc
+
+    source ~/.bashrc
+
+Confirm BOSH is talking to the director
+
+    bosh deployments
 
 ## Kubernetes clusters (GCP)
 
+### Install tkgi and kubectl CLIs
+
+List and download CLI binaries
+
+    pivnet product-files -p pivotal-container-service -r 1.8.1
+    pivnet download-product-files --product-slug='pivotal-container-service' --release-version='1.8.1' --product-file-id=737305
+    pivnet download-product-files --product-slug='pivotal-container-service' --release-version='1.8.1' --product-file-id=737294
+
+Rename and make binaries executable
+
+    mv tkgi-linux-amd64-1.8.0-build.75 tkgi
+    chmod +x tkgi
+    mv kubectl-linux-amd64-1.17.8 kubectl
+    chmod +x kubectl
+    mv tkgi bin/
+    mv kubectl bin/
+
+Verify the CLIs work
+
+    tkgi --version
+    kubectl version
+
+### Deploy a Kubernetes cluster
+
+Get credentials
+
+    om credential-references --product-name pivotal-container-service
+    om credentials \
+      --product-name pivotal-container-service \
+      --credential-reference '.properties.uaa_admin_password'
+
+Login
+
+    tkgi login -a api.pks.${ENV_NAME}.${DOMAIN_NAME} -u admin -p RJxsn-hvWcx6fZD-dvZi1HkjfJrLstN_ -k
+
+Confirm the access token
+
+    cat ~/.pks/creds.yml
+
+Confirm you are logged in (not getting `Error: You are not currently authenticated. Please log in to continue.`)
+
+    tkgi clusters
+
+### Create a new Kubernetes cluster
+
+View plans
+
+    tkgi plans
+
+#### Create GCP Load Balancer (step 1 & 2)
+
+<https://docs.pivotal.io/tkgi/1-8/gcp-cluster-load-balancer.html>
+
+#### Create the Cluster
+
+    CLUSTER_NAME="my-cluster"
+
+    tkgi create-cluster ${CLUSTER_NAME} \
+      --num-nodes 3 \
+      --plan small \
+      --external-hostname ${CLUSTER_NAME}.${ENV_NAME}.${DOMAIN_NAME}
+
+Watch cluster creation
+
+    watch tkgi cluster ${CLUSTER_NAME}
+
+Get master IP
+
+    tkgi cluster ${CLUSTER_NAME}
+
+Finish the backend of the load balancer
+<https://docs.pivotal.io/tkgi/1-8/gcp-cluster-load-balancer.html#backend>
+
+Review the contents of
+
+    cat ~/.kube/config
+
+Get the BOSH deployment name of the cluster
+
+    CLUSTER_DEPLOYMENT_NAME="service-instance_$(tkgi cluster \
+      "${CLUSTER_NAME}" | awk '/UUID/ {print $2;}')"
+
+List VMs in the cluster
+
+    bosh -d "${CLUSTER_DEPLOYMENT_NAME}" vms
+
+#### Demonstrate TKGI Kubernetes cluster resilience
+
+One of the benefits of TKGI is that it can monitor the health of the nodes in the Kubernetes cluster, and automatically recover from a number of error conditions. We can demonstrate this by simulating the unexpected loss of a worker node.
+
+Find the name of a worker node in your cluster using:
+
+    bosh -d "${CLUSTER_DEPLOYMENT_NAME}" vms --json | \
+      jq -r ' .Tables[]
+              | .Rows
+              | [.[] | select(.instance | startswith("worker"))][0].vm_cid'
+
+Delete that VM in gcp then watch the cluster status
+
+    watch bosh -d "${CLUSTER_DEPLOYMENT_NAME}" vms --tty
+    watch bosh tasks --recent=20 --all --tty
+
 ## Harbor
+
+Download Harbor tile
+
+    pivnet download-product-files --product-slug='harbor-container-registry' --release-version='2.0.1' --product-file-id=727895
+
+Upload product
+
+    om upload-product --product harbor-container-registry-2.0.1-build.8.pivotal
+
+Configure harbor: <https://docs.pivotal.io/partners/vmware-harbor/installing.html>
+
+-   General -
+    Enter the following fully-qualified hostname for the Harbor VM: harbor.${ENV_NAME}.${DOMAIN_NAME}. Leave the Static IP Address field blank.
+
+-   Certificate - Click Generate RSA Certificate. When prompted enter the fully-qualified host name for harbor: harbor.${ENV_NAME}.${DOMAIN_NAME}. Leave the CA field blank.
+
+-   Credentials - Enter an administrator password. Be sure to remember it.
+
+Look up external IP address of the Harbor VM
+
+    HARBOR_EXTERNAL_IP="$(gcloud compute instances list \
+      --filter='labels.instance_group=harbor-app' \
+      --format='value(networkInterfaces.accessConfigs[0].natIP)' \
+    )"
+
+Set a variable for the FQDN
+
+    echo "TKGI_HARBOR=harbor.${ENV_NAME}.${DOMAIN_NAME}" >> ~/.env
+    source ~/.env
+
+Create DNS record
+
+    gcloud dns record-sets transaction start \
+      --project $(gcloud config get-value core/project) \
+      --zone=${ENV_NAME}-zone
+
+    gcloud dns record-sets transaction \
+      add ${HARBOR_EXTERNAL_IP} \
+      --name=${TKGI_HARBOR}. \
+      --project $(gcloud config get-value core/project) \
+      --ttl=300 --type=A --zone=${ENV_NAME}-zone
+
+    gcloud dns record-sets transaction execute \
+      --project $(gcloud config get-value core/project) \
+      --zone=${ENV_NAME}-zone
+
+Create a firewall rule allowing ingress 443
+
+    gcloud compute firewall-rules create harbor \
+      --network=${ENV_NAME}-pcf-network \
+      --action=ALLOW \
+      --rules=tcp:443 \
+      --target-tags=harbor-app \
+      --project=$(gcloud config get-value core/project)
+
+Verify dns
+
+    NS=$(dig +short NS ${ENV_NAME}.${DOMAIN_NAME} |head -n1)
+    dig @${NS} "$TKGI_HARBOR"
+
+### Trust the Ops Manager CA certificate on your jumpbox
+
+    om curl --path /download_root_ca_cert > opsman.crt
+    chmod 644 opsman.crt
+    sudo mkdir /usr/local/share/ca-certificates
+    sudo mv opsman.crt /usr/local/share/ca-certificates/
+    sudo update-ca-certificates
+
+### Install docker on the jumpbox
+
+    sudo apt install docker.io
+    sudo usermod -a -G docker $USER
+    sudo systemctl start docker
+    sudo systemctl enable docker
+
+### Push an image to Harbor
+
+    docker pull nginx
+    docker login "https://${TKGI_HARBOR}" --username admin
+
+Create a dockerfile
+
+    mkdir -p ~/workspace/my-nginx
+    cd ~/workspace/my-nginx
+
+    echo "Hello Harbor!" > index.html
+
+    cat > Dockerfile <<-EOF
+    FROM nginx
+    COPY ./index.html /usr/share/nginx/html/index.html
+    EOF
+
+Build an image from your Dockerfile, tag it with the Harbor address and then push it to Harbor
+
+    docker build -t "${TKGI_HARBOR}/library/nginx:latest" .
+    docker push "${TKGI_HARBOR}/library/nginx:latest"
+
+### Deploy your app to Kubernetes
+
+    kubectl create -f - <<-EOF
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: webserver
+      labels:
+        app: nginx
+        deployment: harbor-custom-app
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          app: nginx
+      template:
+        metadata:
+          labels:
+            app: nginx
+            deployment: harbor-custom-app
+        spec:
+          containers:
+          - name: nginx
+            image: ${TKGI_HARBOR}/library/nginx:latest
+            ports:
+            - containerPort: 80
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: harbor-custom-app-lb
+      labels:
+        deployment: harbor-custom-app
+    spec:
+      type: LoadBalancer
+      ports:
+      - port: 80
+        protocol: TCP
+      selector:
+        app: nginx
+        deployment: harbor-custom-app
+    EOF
+
+Monitor the deployment using
+
+    watch 'kubectl get services,pods -o wide'
+
+Extract the external load balancer IP once its not in status <pending> anymore and access the application using curl. It might take a few minutes for the load balancer to start responding.
+
+    EXTERNAL_LB_IP=$(kubectl get service harbor-custom-app-lb \
+      --output=jsonpath='{.status.loadBalancer.ingress[0].ip}'
+    )
+
+    curl $EXTERNAL_LB_IP
+
+### Destroy previously deployed application
+
+    kubectl delete all -l deployment=harbor-custom-app
 
 ## Application deployment
 
+### Deploy app
+
+First, create the Redis master pod and service
+
+    kubectl apply -f https://k8s.io/examples/application/guestbook/redis-master-deployment.yaml
+    kubectl apply -f https://k8s.io/examples/application/guestbook/redis-master-service.yaml
+
+Create the Redis slaves
+
+    kubectl apply -f https://k8s.io/examples/application/guestbook/redis-slave-deployment.yaml
+    kubectl apply -f https://k8s.io/examples/application/guestbook/redis-slave-service.yaml
+
+View Redis pods
+
+    kubectl get pods
+
+Deploy the application front-end and front-end server
+
+    kubectl apply -f https://k8s.io/examples/application/guestbook/frontend-deployment.yaml
+    kubectl apply -f https://k8s.io/examples/application/guestbook/frontend-service.yaml
+
+View the services
+
+    kubectl get service
+
+### Opening the firewall
+
+Open the firewall ports using the following commands
+
+    SERVICE_PORT=$(kubectl get services --output=json | \
+      jq '.items[] | select(.metadata.name=="frontend") | .spec.ports[0].nodePort')
+
+    echo "Service port = ${SERVICE_PORT}"
+
+    gcloud compute firewall-rules create guestbook \
+      --network=${ENV_NAME}-pcf-network \
+      --action=ALLOW \
+      --rules=tcp:${SERVICE_PORT} \
+      --target-tags=worker
+
+### Create a load balancer
+
+    cat > frontend-load-balanced.yml << 'EOF'
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: frontend
+      labels:
+        app: guestbook
+        tier: frontend
+    spec:
+      type: LoadBalancer
+      ports:
+      - port: 80
+      selector:
+        app: guestbook
+        tier: frontend
+    EOF
+
+    kubectl apply -f frontend-load-balanced.yml
+
 ## Helm
+
+Get the helm binary
+
+    wget https://get.helm.sh/helm-v3.2.4-linux-amd64.tar.gz
+    tar -xzvf helm-v3.2.4-linux-amd64.tar.gz
+    chmod +x helm
+    mv helm ~./workspace/bin
+
+Add the official helm stable repo
+
+    helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+
+Verify the repo was added
+
+    helm repo list
+
+Search for mysql
+
+    helm search repo mysql
+
+Download the chart
+
+    helm pull stable/mysql
+
+### Upload the chart to harbor
+
+To upload the mysql chart to harbor, you must first install a helm plugin
+
+    helm plugin install https://github.com/chartmuseum/helm-push
+
+Verify by listing the helm plugins
+
+    helm plugin list
+
+Add the chart repository to helm
+
+    helm repo add library "https://harbor.${ENV_NAME}.${DOMAIN_NAME}/chartrepo/library"
+
+Verify it's in the helm repository
+
+    helm repo list
+
+Push the chart to Harbor
+
+    helm push mysql-1.6.6.tgz library --username=admin --password=****
+
+### Install the chart
+
+    helm show chart library/mysql
+    helm install mydb library/mysql
+
+Watch the progress of the helm mysql deployment
+
+    watch 'kubectl get deploy'
+
+View running release
+
+    helm ls
+
+### Test the database server
+
+To get your root password run:
+
+    MYSQL_ROOT_PASSWORD=$(kubectl get secret --namespace default mydb-mysql -o jsonpath="{.data.mysql-root-password}" | base64 --decode; echo)
+
+Run an Ubuntu pod that you can use as a client:
+
+    kubectl run -i --tty ubuntu --image=ubuntu:16.04 --restart=Never -- bash -il
+
+Install the mysql client:
+
+    apt-get update && apt-get install mysql-client -y
+
+Connect using the mysql cli, then provide your password
+
+    mysql -h mydb-mysql -p
+
+### Cleanup
+
+    helm uninstall mydb
