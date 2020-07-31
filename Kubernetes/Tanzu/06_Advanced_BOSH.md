@@ -107,7 +107,7 @@ Add lb under vm_extensions:
 add 10GB under disk_types:
 
     - cloud_properties:
-        type: gp2
+        type: pd-standard
       disk_size: 10240
       name: "10GB"
 
