@@ -69,22 +69,22 @@ Create variables file
 Contents
 
     ---
-    deployment_name: 'concourse'
-    network_name: 'services'
-    web_vm_type: 'small.disk'
-    db_vm_type: 'small.disk'
-    worker_vm_type: 'small.disk'
-    db_persistent_disk_type: '10GB'
+    deployment_name: concourse
+    network_name: services
+    web_vm_type: small.disk
+    db_vm_type: small.disk
+    worker_vm_type: small.disk
+    db_persistent_disk_type: 10GB
     azs: [us-central1-a, us-central1-b, us-central1-c]
-    external_url: 'https://35.225.118.33'
-    external_host: '35.225.118.33'
+    external_url: https://35.225.118.33
+    external_host: 35.225.118.33
     web_instances: 1
     worker_instances: 2
     local_user:
       username: admin
       password: admin
-    web_network_vm_extension: 'lb'
-    web_network_name: 'services'
+    web_network_vm_extension: lb
+    web_network_name: services
 
 Update cloud config vm_type
 
@@ -99,10 +99,9 @@ Update cloud config vm_type
 
 Add lb under vm_extensions:
 
-    - name: lb
-      cloud_properties:
-        elbs:
-        - pks-0728-rickrocklin-concourse
+    - cloud_properties:
+        target_pool: pks-0728-<LB>-concourse
+      name: lb
 
 add 10GB under disk_types:
 
