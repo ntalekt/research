@@ -47,7 +47,7 @@ List the files under this product and identify the file in question.
 
     pivnet product-files -p elastic-runtime -r 2.9.5
 
-Download GCP Terraform Templates
+Download GCP Terraform Templates (<https://github.com/pivotal-cf/terraforming-gcp/tree/master/terraforming-pks>)
 
     pivnet download-product-files -p elastic-runtime -i 697856 -r 2.9.5
 
